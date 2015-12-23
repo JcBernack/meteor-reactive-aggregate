@@ -50,7 +50,7 @@ Now you publish the aggregation on the server:
     Meteor.publish("reportTotals", function() {
     // Remember, ReactiveAggregate doesn't return anything
     ReactiveAggregate(this, Reports, [{
-        // assuming our Reports collection have the field: hours
+        // assuming our Reports collection have the fields: hours, books
         $group: {
             '_id': this.userId,
             'hours': {
