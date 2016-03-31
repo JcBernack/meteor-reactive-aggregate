@@ -16,7 +16,9 @@ This helper can be used to reactively publish the results of an aggregation.
   - `observeSelector` can be given to improve efficiency. This selector is used for observing the collection.
   If none is given any change to the collection will cause the aggregation to be reevaluated.
   - `clientCollection` defaults to `collection._name` but can be overriden to sent the results
-  to a different client-side collection. 
+  to a different client-side collection.
+  - `throttleWait` (default: 250) number of millseconds to throttle aggregate calls when a bunch of document
+  changes occur in quick succession.
 
 ## Quick Example
 
