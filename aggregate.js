@@ -1,7 +1,8 @@
 ReactiveAggregate = function (sub, collection, pipeline, options) {
   var defaultOptions = {
     observeSelector: {},
-    clientCollection: collection._name
+    clientCollection: collection._name,
+    throttleWait: 250
   };
   options = _.extend(defaultOptions, options);
 
@@ -9,7 +10,7 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
   sub._ids = {};
   sub._iteration = 1;
 
-  function update() {
+  var update = _.throttle(Meteor.bindEnvironment(function() {
     if (initializing) return;
     // add and update documents on the client
     collection.aggregate(pipeline).forEach(function (doc) {
@@ -28,7 +29,7 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
       }
     });
     sub._iteration++;
-  }
+  }), options.throttleWait);
 
   // track any changes on the collection used for the aggregation
   var query = collection.find(options.observeSelector);
