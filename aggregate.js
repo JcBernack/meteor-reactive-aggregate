@@ -31,6 +31,7 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
       sub._iteration++;
     }
     catch (e) {
+      if (handle) handle.stop();
       sub.error(e);
     }
   }), options.throttleWait);
