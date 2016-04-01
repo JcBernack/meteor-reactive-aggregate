@@ -10,26 +10,34 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
   sub._ids = {};
   sub._iteration = 1;
 
-  var update = _.throttle(Meteor.bindEnvironment(function() {
-    if (initializing) return;
-    // add and update documents on the client
-    collection.aggregate(pipeline).forEach(function (doc) {
-      if (!sub._ids[doc._id]) {
-        sub.added(options.clientCollection, doc._id, doc);
-      } else {
-        sub.changed(options.clientCollection, doc._id, doc);
-      }
-      sub._ids[doc._id] = sub._iteration;
-    });
-    // remove documents not in the result anymore
-    _.forEach(sub._ids, function (v, k) {
-      if (v != sub._iteration) {
-        delete sub._ids[k];
-        sub.removed(options.clientCollection, k);
-      }
-    });
-    sub._iteration++;
+  var doUpdate = _.throttle(Meteor.bindEnvironment(function() {
+    try {
+      // add and update documents on the client
+      collection.aggregate(pipeline).forEach(function (doc) {
+        if (!sub._ids[doc._id]) {
+          sub.added(options.clientCollection, doc._id, doc);
+        } else {
+          sub.changed(options.clientCollection, doc._id, doc);
+        }
+        sub._ids[doc._id] = sub._iteration;
+      });
+      // remove documents not in the result anymore
+      _.forEach(sub._ids, function (v, k) {
+        if (v != sub._iteration) {
+          delete sub._ids[k];
+          sub.removed(options.clientCollection, k);
+        }
+      });
+      sub._iteration++;
+    }
+    catch (e) {
+      sub.error(e);
+    }
   }), options.throttleWait);
+
+  function update() {
+    if (!initializing) doUpdate();
+  }
 
   // track any changes on the collection used for the aggregation
   var query = collection.find(options.observeSelector);
