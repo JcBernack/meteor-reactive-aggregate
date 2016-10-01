@@ -1,6 +1,7 @@
 ReactiveAggregate = function (sub, collection, pipeline, options) {
   var defaultOptions = {
     observeSelector: {},
+    observeOptions: {},
     clientCollection: collection._name
   };
   options = _.extend(defaultOptions, options);
@@ -31,7 +32,7 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
   }
 
   // track any changes on the collection used for the aggregation
-  var query = collection.find(options.observeSelector);
+  var query = collection.find(options.observeSelector, options.observeOptions);
   var handle = query.observeChanges({
     added: update,
     changed: update,
