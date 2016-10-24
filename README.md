@@ -14,8 +14,10 @@ This helper can be used to reactively publish the results of an aggregation.
 - `pipeline` is the aggregation pipeline to execute.
 - `options` provides further options:
   - `observeSelector` can be given to improve efficiency. This selector is used for observing the collection.
+  (e.g. `{ authorId: { $exists: 1 } }`)
   - `observeOptions` can be given to limit fields, further improving efficiency. Ideally used to limit fields on your query.
   If none is given any change to the collection will cause the aggregation to be reevaluated.
+  (e.g. `{ limit: 10, sort: { createdAt: -1 } }`)
   - `clientCollection` defaults to `collection._name` but can be overriden to sent the results
   to a different client-side collection. 
 
