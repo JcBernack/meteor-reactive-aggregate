@@ -2,7 +2,8 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
   var defaultOptions = {
     observeSelector: {},
     observeOptions: {},
-    clientCollection: collection._name
+    clientCollection: collection._name,
+    transform: function(doc) { return doc; }
   };
   options = _.extend(defaultOptions, options);
 
@@ -13,7 +14,8 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
   function update() {
     if (initializing) return;
     // add and update documents on the client
-    collection.aggregate(pipeline).forEach(function (doc) {
+    collection.aggregate(pipeline).forEach(function (result) {
+      const doc = options.transform(result);
       if (!sub._ids[doc._id]) {
         sub.added(options.clientCollection, doc._id, doc);
       } else {
