@@ -13,6 +13,7 @@ This helper can be used to reactively publish the results of an aggregation.
 - `collection` is the Mongo.Collection instance to query.
 - `pipeline` is the aggregation pipeline to execute.
 - `options` provides further options:
+  - `observeCollections` array of collections for observe, by default set `collection`.
   - `observeSelector` can be given to improve efficiency. This selector is used for observing the collection.
   (e.g. `{ authorId: { $exists: 1 } }`)
   - `observeOptions` can be given to limit fields, further improving efficiency. Ideally used to limit fields on your query.
@@ -20,6 +21,15 @@ This helper can be used to reactively publish the results of an aggregation.
   (e.g. `{ limit: 10, sort: { createdAt: -1 } }`)
   - `clientCollection` defaults to `collection._name` but can be overriden to sent the results
   to a different client-side collection. 
+
+### Multiple collections observe
+
+- `options`:
+  - `observeCollections` can be array of collections;
+  - `observeSelector` can be array of selectors;
+  - `observeOptions` can be array of observe options.
+
+See [example for observing multiple collections](#multiple-collections-observe-example).
 
 ## Quick Example
 
@@ -94,3 +104,25 @@ Finally, your template:
 Your aggregated values will therefore be available in client-side and behave reactively just as you'd expect.
 
 Enjoy aggregating `reactively`!
+
+## Multiple collections observe example
+
+
+    Meteor.publish("booksByAuthor", function () {
+      ReactiveAggregate(this, Books, [{
+        $group: {
+          _id: "$author",
+          books: { $push: "$$ROOT" }
+        }
+      }], {
+        observeCollections: [
+          Books,
+          Authors
+        ],
+        observeSelector: [
+          { authorId: { $exists: 1 } } // for Books
+          // for Authors get default: {}
+        ],
+        // observeOptions: // for Books and Authors get {}
+      );
+    });
