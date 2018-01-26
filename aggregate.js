@@ -1,5 +1,6 @@
 ReactiveAggregate = function (sub, collection, pipeline, options) {
   var defaultOptions = {
+    observeCollections: collection,
     observeSelector: {},
     observeOptions: {},
     clientCollection: collection._name
@@ -32,15 +33,55 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
   }
 
   // track any changes on the collection used for the aggregation
-  var query = collection.find(options.observeSelector, options.observeOptions);
-  var handle = query.observeChanges({
-    added: update,
-    changed: update,
-    removed: update,
-    error: function (err) {
-      throw err;
-    }
-  });
+  if (!Array.isArray(options.observeCollections)) {
+    // Make array
+    var arr = [];
+    arr.push(options.observeCollections);
+    options.observeCollections = arr;
+  }
+  // Create observers
+  /**
+   * @type {Meteor.LiveQueryHandle[]|*}
+   */
+  var handles = options.observeCollections.map( createObserver );
+
+  /**
+   * Create observer
+   * @param {Mongo.Collection|*} collection
+   * @param {number} i
+   * @returns {any|*|Meteor.LiveQueryHandle} Handle
+   */
+  function createObserver( collection, i) {
+    var observeSelector = getObjectFrom(options.observeOptions, i);
+    var observeOptions = getObjectFrom(options.observeOptions, i);
+    var query = collection.find(observeSelector, observeOptions);
+    return handle = query.observeChanges({
+      added: update,
+      changed: update,
+      removed: update,
+      error: function (err) {
+        throw err;
+      }
+    });
+
+  }
+
+  /**
+   * Get object from array or just object
+   * @param {Object|[]} variable
+   * @param i
+   * @returns {{}}
+   */
+  function getObjectFrom(variable, i) {
+    return Array.isArray(variable)
+      ? (
+        typeof variable[i] !== 'undefined'
+          ? variable[i]
+          : {}
+      )
+      : variable;
+  }
+  
   // observeChanges() will immediately fire an "added" event for each document in the query
   // these are skipped using the initializing flag
   initializing = false;
@@ -51,6 +92,8 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
 
   // stop observing the cursor when the client unsubscribes
   sub.onStop(function () {
-    handle.stop();
+    handles.map(function (handle) {
+      handle.stop();
+    });
   });
 };
