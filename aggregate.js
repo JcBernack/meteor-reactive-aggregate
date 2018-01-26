@@ -23,7 +23,7 @@ ReactiveAggregate = function (sub, collection, pipeline, options) {
       });
       // remove documents not in the result anymore
       _.forEach(sub._ids, function (v, k) {
-        if (v != sub._iteration) {
+        if (v !== sub._iteration) {
           delete sub._ids[k];
           sub.removed(options.clientCollection, k);
         }
