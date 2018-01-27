@@ -20,7 +20,9 @@ This helper can be used to reactively publish the results of an aggregation.
   If none is given any change to the collection will cause the aggregation to be reevaluated.
   (e.g. `{ limit: 10, sort: { createdAt: -1 } }`)
   - `clientCollection` defaults to `collection._name` but can be overriden to sent the results
-  to a different client-side collection. 
+  to a different client-side collection.
+  - `throttleWait` (default: 250) number of millseconds to throttle aggregate calls when a bunch of document
+  changes occur in quick succession.
 
 ### Multiple collections observe
 
