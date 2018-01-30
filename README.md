@@ -15,6 +15,7 @@ This helper can be used to reactively publish the results of an aggregation.
 - `options` provides further options:
   - `observeSelector` can be given to improve efficiency. This selector is used for observing the reactive collections. If you wish to have different selectors for multiple reactive collections, use `lookupCollections` options.
   - `observeOptions` can be given to limit fields, further improving efficiency. Ideally used to limit fields on your query.
+  - `delay` (default: `250`) the time (in milliseconds) between re-runs caused by changes in any reactive collections in the aggregation.
   - `lookupCollections` is keyed by your `$lookup.from` collection name(s). it takes `observeSelector` and `observeOptions` parameters. see example below.
   If none is given any change to the collection will cause the aggregation to be reevaluated.
 
