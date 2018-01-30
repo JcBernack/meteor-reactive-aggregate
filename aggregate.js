@@ -1,3 +1,4 @@
+import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 
 const defaultOptions = ({
@@ -5,6 +6,7 @@ const defaultOptions = ({
 }) => ({
   observeSelector: {},
   observeOptions: {},
+  delay: 250,
   lookupCollections: {},
   clientCollection: collection._name,
   ...options
@@ -13,11 +15,33 @@ const defaultOptions = ({
 export const ReactiveAggregate = function (subscription, collection, pipeline = [], options = {}) {
   // fill out default options
   const {
-    observeSelector, observeOptions, lookupCollections, clientCollection
+    observeSelector, observeOptions, delay, lookupCollections, clientCollection
   } = defaultOptions({
     collection,
     options
   });
+
+  // run, or re-run, the aggregation pipeline
+  const throttledUpdate = _.throttle(Meteor.bindEnvironment(() => {
+    // add and update documents on the client
+    collection.aggregate(safePipeline).forEach((doc) => {
+      if (!subscription._ids[doc._id]) {
+        subscription.added(clientCollection, doc._id, doc);
+      } else {
+        subscription.changed(clientCollection, doc._id, doc);
+      }
+      subscription._ids[doc._id] = subscription._iteration;
+    });
+    // remove documents not in the result anymore
+    _.each(subscription._ids, (iteration, key) => {
+      if (iteration != subscription._iteration) {
+        delete subscription._ids[key];
+        subscription.removed(clientCollection, key);
+      }
+    });
+    subscription._iteration++;
+  }), delay);
+  const update = () => !initializing ? throttledUpdate() : null;
 
   // don't update the subscription until __after__ the initial hydrating of our collection
   let initializing = true;
@@ -57,29 +81,6 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
   subscription.ready();
   // stop observing the cursor when the client unsubscribes
   subscription.onStop(() => observerHandles.map((handle) => handle.stop()));
-
-  function update() {
-    if (initializing) {
-      return;
-    }
-    // add and update documents on the client
-    collection.aggregate(safePipeline).forEach((doc) => {
-      if (!subscription._ids[doc._id]) {
-        subscription.added(clientCollection, doc._id, doc);
-      } else {
-        subscription.changed(clientCollection, doc._id, doc);
-      }
-      subscription._ids[doc._id] = subscription._iteration;
-    });
-    // remove documents not in the result anymore
-    _.each(subscription._ids, (iteration, key) => {
-      if (iteration != subscription._iteration) {
-        delete subscription._ids[key];
-        subscription.removed(clientCollection, key);
-      }
-    });
-    subscription._iteration++;
-  }
 
   /**
 	 * Create observer
