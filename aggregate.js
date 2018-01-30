@@ -87,7 +87,7 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
 	 * @param {Mongo.Collection|*} collection
 	 * @returns {any|*|Meteor.LiveQueryHandle} Handle
 	 */
-  function createObserver(collection, queryOptions) {
+  function createObserver(collection, queryOptions = {}) {
     const { observeSelector, observeOptions } = queryOptions;
     const selector = observeSelector || {};
     const options = observeOptions || {};
