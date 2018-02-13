@@ -1,6 +1,6 @@
 Package.describe({
   name: "jcbernack:reactive-aggregate",
-  version: "0.8.0",
+  version: "1.0.0",
   // Brief, one-line summary of the package.
   summary: "Reactively publish aggregations.",
   // URL to the Git repository containing the source code for this package.
@@ -11,10 +11,9 @@ Package.describe({
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom("1.2.1");
-  api.use("underscore");
-  api.use("mongo");
-  api.use("meteorhacks:aggregate@1.3.0");
-  api.addFiles("aggregate.js");
-  api.export("ReactiveAggregate");
+  api.versionsFrom("1.5");
+  api.use(['ecmascript', 'underscore', 'mongo']);
+
+  api.addFiles("./mongo-collection-aggregate.js");
+  api.mainModule("./aggregate.js");
 });
