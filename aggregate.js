@@ -9,10 +9,11 @@ const defaultOptions = ({
   delay: 250,
   lookupCollections: {},
   clientCollection: collection._name,
+  noReady: false,
   ...options
 });
 
-export const ReactiveAggregate = function (subscription, collection, pipeline = [], options = {}) {
+export default ReactiveAggregate = function (subscription, collection, pipeline = [], options = {}) {
   // fill out default options
   const {
     observeSelector, observeOptions, delay, lookupCollections, clientCollection
@@ -78,7 +79,7 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
   // send an initial result set to the client
   update();
   // mark the subscription as ready
-  subscription.ready();
+  if (!options.noReady) subscription.ready();
   // stop observing the cursor when the client unsubscribes
   subscription.onStop(() => observerHandles.map((handle) => handle.stop()));
 
