@@ -12,7 +12,7 @@ const defaultOptions = ({
   ...options
 });
 
-export const ReactiveAggregate = function (subscription, collection, pipeline = [], options = {}) {
+ReactiveAggregate = function (subscription, collection, pipeline = [], options = {}) {
   // fill out default options
   const {
     observeSelector, observeOptions, delay, lookupCollections, clientCollection
