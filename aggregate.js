@@ -9,10 +9,11 @@ const defaultOptions = ({
   delay: 250,
   lookupCollections: {},
   clientCollection: collection._name,
+  noReady: false,
   ...options
 });
 
-export const ReactiveAggregate = function (subscription, collection, pipeline = [], options = {}) {
+const ReactiveAggregate = function(subscription, collection, pipeline = [], options = {}) {
   // fill out default options
   const {
     observeSelector, observeOptions, delay, lookupCollections, clientCollection
@@ -20,7 +21,7 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
     collection,
     options
   });
-
+  
   // run, or re-run, the aggregation pipeline
   const throttledUpdate = _.throttle(Meteor.bindEnvironment(() => {
     // add and update documents on the client
@@ -42,13 +43,13 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
     subscription._iteration++;
   }), delay);
   const update = () => !initializing ? throttledUpdate() : null;
-
+  
   // don't update the subscription until __after__ the initial hydrating of our collection
   let initializing = true;
   // mutate the subscription to ensure it updates as we version it
   subscription._ids = {};
   subscription._iteration = 1;
-
+  
   // create a list of collections to watch and make sure
   // we create a sanitized "strings-only" version of our pipeline
   const observerHandles = [createObserver(collection, { observeSelector, observeOptions })];
@@ -71,22 +72,22 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
     }
     return stage;
   });
-
+  
   // observeChanges() will immediately fire an "added" event for each document in the query
   // these are skipped using the initializing flag
   initializing = false;
   // send an initial result set to the client
   update();
   // mark the subscription as ready
-  subscription.ready();
+  if (!options.noReady) subscription.ready();
   // stop observing the cursor when the client unsubscribes
   subscription.onStop(() => observerHandles.map((handle) => handle.stop()));
-
+  
   /**
-	 * Create observer
-	 * @param {Mongo.Collection|*} collection
-	 * @returns {any|*|Meteor.LiveQueryHandle} Handle
-	 */
+  * Create observer
+  * @param {Mongo.Collection|*} collection
+  * @returns {any|*|Meteor.LiveQueryHandle} Handle
+  */
   function createObserver(collection, queryOptions = {}) {
     const { observeSelector, observeOptions } = queryOptions;
     const selector = observeSelector || {};
@@ -102,3 +103,5 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
     });
   }
 };
+
+export default ReactiveAggregate;
