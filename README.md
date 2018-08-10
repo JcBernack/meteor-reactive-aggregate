@@ -102,6 +102,8 @@ A publication for one of the
 [examples](https://docs.mongodb.org/v3.0/reference/operator/aggregation/group/#group-documents-by-author)
 in the MongoDB docs would look like this:
 ```
+import { ReactiveAggregate } from 'meteor/jcbernack:reactive-aggregate';
+
 Meteor.publish("booksByAuthor", function () {
     ReactiveAggregate(this, Books, [{
     $group: {
@@ -127,6 +129,8 @@ Create the `clientReport` in the client side (its needed only for client use). T
 
 Now you publish the aggregation on the server:
 ```
+import { ReactiveAggregate } from 'meteor/jcbernack:reactive-aggregate';
+
 Meteor.publish("reportTotals", function() {
     // Remember, ReactiveAggregate doesn't return anything
     ReactiveAggregate(this, Reports, [{
@@ -178,6 +182,8 @@ Enjoy aggregating `reactively`!
 
 ## Multiple collections observe example
 ```
+import { ReactiveAggregate } from 'meteor/jcbernack:reactive-aggregate';
+
 Meteor.publish("booksByAuthor", function () {
     ReactiveAggregate(this, Books, [{
     $group: {
