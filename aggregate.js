@@ -27,8 +27,11 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
   // run, or re-run, the aggregation pipeline
   const throttledUpdate = _.throttle(Meteor.bindEnvironment(() => {
     collection.aggregate(safePipeline).each((err, doc) => {
-      // first, check to make sure there are documents remaining in the cursor
-      if (!doc) {
+      if (err) {
+        subscription.error(new Meteor.Error("aggregation-failed", err.message));
+      }
+      // when cursor.each is done, it sends null in place of a document - check for that
+      else if (!doc) {
         // remove documents not in the result anymore
         _.each(subscription._ids, (iteration, key) => {
           if (iteration != subscription._iteration) {
@@ -43,7 +46,7 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
           subscription.ready();
         }
       }
-      // cursor is not empty, add and update documents on the client
+      // cursor is not done iterating, add and update documents on the client
       else {
         if (!subscription._ids[doc._id]) {
           subscription.added(clientCollection, doc._id, doc);
