@@ -21,25 +21,41 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
     options
   });
 
+  // flag to prevent multiple ready messages from being sent
+  let ready = false;
+
   // run, or re-run, the aggregation pipeline
   const throttledUpdate = _.throttle(Meteor.bindEnvironment(() => {
-    // add and update documents on the client
-    collection.aggregate(safePipeline).forEach((doc) => {
-      if (!subscription._ids[doc._id]) {
-        subscription.added(clientCollection, doc._id, doc);
-      } else {
-        subscription.changed(clientCollection, doc._id, doc);
+    collection.aggregate(safePipeline).each((err, doc) => {
+      if (err) {
+        subscription.error(new Meteor.Error("aggregation-failed", err.message));
       }
-      subscription._ids[doc._id] = subscription._iteration;
-    });
-    // remove documents not in the result anymore
-    _.each(subscription._ids, (iteration, key) => {
-      if (iteration != subscription._iteration) {
-        delete subscription._ids[key];
-        subscription.removed(clientCollection, key);
+      // when cursor.each is done, it sends null in place of a document - check for that
+      else if (!doc) {
+        // remove documents not in the result anymore
+        _.each(subscription._ids, (iteration, key) => {
+          if (iteration != subscription._iteration) {
+            delete subscription._ids[key];
+            subscription.removed(clientCollection, key);
+          }
+        });
+        subscription._iteration++;
+        // if this is the first run, mark the subscription ready
+        if (!ready) {
+          ready = true;
+          subscription.ready();
+        }
+      }
+      // cursor is not done iterating, add and update documents on the client
+      else {
+        if (!subscription._ids[doc._id]) {
+          subscription.added(clientCollection, doc._id, doc);
+        } else {
+          subscription.changed(clientCollection, doc._id, doc);
+        }
+        subscription._ids[doc._id] = subscription._iteration;
       }
     });
-    subscription._iteration++;
   }), delay);
   const update = () => !initializing ? throttledUpdate() : null;
 
@@ -77,8 +93,6 @@ export const ReactiveAggregate = function (subscription, collection, pipeline = 
   initializing = false;
   // send an initial result set to the client
   update();
-  // mark the subscription as ready
-  subscription.ready();
   // stop observing the cursor when the client unsubscribes
   subscription.onStop(() => observerHandles.map((handle) => handle.stop()));
 
