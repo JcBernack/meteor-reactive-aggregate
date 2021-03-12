@@ -38,7 +38,7 @@ This helper can be used to reactively publish the results of an aggregation.
       lookupCollections: {
           'books': {
              observeSelector: {
-                'releaseDate', { $gte: new Date('2010-01-01') }
+                'releaseDate': { $gte: new Date('2010-01-01') }
              },
              observeOptions: {
                  limit: 10,
