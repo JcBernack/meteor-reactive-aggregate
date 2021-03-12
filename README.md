@@ -7,6 +7,8 @@ Reactively publish aggregations.
 This helper can be used to reactively publish the results of an aggregation.
 
 ## Usage
+    import ReactiveAggregate from 'meteor/jcbernack:reactive-aggregate';
+    
     ReactiveAggregate(subscription, collection, pipeline[, options])
 
 - `subscription` should always be `this` in a publication.
